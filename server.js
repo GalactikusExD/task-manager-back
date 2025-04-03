@@ -246,6 +246,27 @@ app.get("/api/groups/me", authenticate, async (req, res) => {
   }
 });
 
+app.delete("/api/groups/:groupId", authenticate, async (req, res) => {
+  try {
+    const { groupId } = req.params;
+
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ error: "Grupo no encontrado" });
+    }
+
+    if (group.createdBy.toString() !== req.user.userId) {
+      return res.status(403).json({ error: "Solo el creador del grupo puede eliminarlo" });
+    }
+
+    await Group.findByIdAndDelete(groupId);
+    res.json({ message: "Grupo eliminado con éxito" });
+  } catch (error) {
+    console.error("Error al eliminar el grupo:", error);
+    res.status(500).json({ error: "Error al eliminar el grupo", details: error.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
